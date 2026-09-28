@@ -79,16 +79,22 @@ export function currentLocale() {
             return locale;
         }
         // If the locale is a 2-letter code, we can try to find a regional variant
-        // e.g. "fr" may not be in the messages, but "fr-FR" is
+        // e.g. "fr" may not be in the messages, but "fr-FR" is, and "cs" is registered as "cs-CZ"
+        // "zh" defaults to Simplified Chinese instead of "zh-HK", the first "zh-" entry
         if (locale.length === 2) {
-            const regionalLocale = `${locale}-${locale.toUpperCase()}`;
-            if (regionalLocale in messages) {
+            const preferredLocale = locale === "zh" ? "zh-CN" : `${locale}-${locale.toUpperCase()}`;
+            const regionalLocale =
+                preferredLocale in messages
+                    ? preferredLocale
+                    : Object.keys(messages).find((key) => key.startsWith(`${locale}-`));
+            if (regionalLocale) {
                 return regionalLocale;
             }
         } else {
             // Some locales are further specified such as "en-US".
             // If we only have a generic locale for this, we can use it too
-            const genericLocale = locale.slice(0, 2);
+            // (split on "-", so a 3-letter code like "fil" does not turn into "fi")
+            const genericLocale = locale.split("-")[0];
             if (genericLocale in messages) {
                 return genericLocale;
             }
